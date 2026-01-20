@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 URL Security Scanner Pro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #4361ee, #3a0ca3);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 { font-size: 2.5rem; margin-bottom: 10px; }
+        .header p { opacity: 0.9; font-size: 1.1rem; }
+        .main-content { padding: 40px; }
+        .input-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        #urlInput {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        .btn {
+            background: #4361ee;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn:hover { background: #3a56d4; }
+        .examples {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        .example-btn {
+            background: white;
+            border: 1px solid #dee2e6;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .example-btn:hover { border-color: #4361ee; }
+        .results { display: none; }
+        .result-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .confidence-bar {
+            height: 10px;
+            background: #dee2e6;
+            border-radius: 5px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4cc9f0, #4361ee);
+            width: 0%;
+            transition: width 1s ease;
+        }
+        .explanations {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .explanation-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in { animation: fadeIn 0.5s ease forwards; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-shield-alt"></i> URL Security Scanner Pro</h1>
+            <p>Protección avanzada contra URLs maliciosas</p>
+        </header>
+        
+        <main class="main-content">
+            <section class="input-section">
+                <h2><i class="fas fa-search"></i> Analizar URL</h2>
+                <div class="input-group">
+                    <input type="text" id="urlInput" placeholder="https://ejemplo.com" autocomplete="off">
+                    <button class="btn" onclick="analyzeURL()">
+                        <i class="fas fa-magnifying-glass"></i> Analizar
+                    </button>
+                </div>
+                
+                <p style="margin: 10px 0; color: #666;">Ejemplos rápidos:</p>
+                <div class="examples">
+                    <button class="example-btn" onclick="setURL('https://google.com')">
+                        <i class="fas fa-check"></i> Google
+                    </button>
+                    <button class="example-btn" onclick="setURL('https://github.com')">
+                        <i class="fas fa-code"></i> GitHub
+                    </button>
+                    <button class="example-btn" onclick="setURL('http://phishing-test.example.com')">
+                        <i class="fas fa-exclamation-triangle"></i> Test Phishing
+                    </button>
+                    <button class="example-btn" onclick="setURL('http://free-gift-cards.scam-site.xyz')">
+                        <i class="fas fa-gift"></i> Posible Scam
+                    </button>
+                </div>
+            </section>
+            
+            <section class="results" id="resultsSection">
+                <h2><i class="fas fa-chart-line"></i> Resultados</h2>
+                
+                <div class="result-card">
+                    <h3 id="resultTitle">Analizando...</h3>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" id="confidenceFill"></div>
+                    </div>
+                    <p>Confianza: <strong id="confidenceValue">0%</strong></p>
+                    <p id="recommendation" style="margin-top: 15px; padding: 15px; background: white; border-radius: 8px;">
+                        Generando recomendación...
+                    </p>
+                </div>
+                
+                <h3><i class="fas fa-lightbulb"></i> Explicación</h3>
+                <div class="explanations" id="explanationsGrid">
+                    <!-- Las explicaciones aparecerán aquí -->
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <script>
+        function setURL(url) {
+            document.getElementById('urlInput').value = url;
+        }
+        
+        async function analyzeURL() {
+            const url = document.getElementById('urlInput').value.trim();
+            if (!url) return alert('Ingresa una URL');
+            
+            // Mostrar carga
+            document.getElementById('resultsSection').style.display = 'block';
+            document.getElementById('resultTitle').textContent = 'Analizando...';
+            document.getElementById('confidenceValue').textContent = '0%';
+            document.getElementById('confidenceFill').style.width = '0%';
+            
+            try {
+                const response = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({url: url})
+                });
+                
+                const data = await response.json();
+                
+                // Actualizar resultados
+                const confidencePercent = Math.round(data.confidence * 100);
+                const isMalicious = data.is_malicious;
+                
+                document.getElementById('resultTitle').textContent = 
+                    isMalicious ? '⚠️ URL Potencialmente Maliciosa' : '✅ URL Segura';
+                document.getElementById('resultTitle').style.color = 
+                    isMalicious ? '#f72585' : '#2ec4b6';
+                document.getElementById('confidenceValue').textContent = `${confidencePercent}%`;
+                document.getElementById('confidenceFill').style.width = `${confidencePercent}%`;
+                document.getElementById('recommendation').textContent = data.recommendation;
+                
+                // Mostrar explicaciones
+                const explanationsGrid = document.getElementById('explanationsGrid');
+                explanationsGrid.innerHTML = '';
+                
+                data.explanations.forEach(exp => {
+                    const card = document.createElement('div');
+                    card.className = 'explanation-card fade-in';
+                    card.innerHTML = `
+                        <h4>${exp.name}</h4>
+                        <p>Valor: <strong>${exp.value.toFixed(3)}</strong></p>
+                        <p>Impacto: <span style="color: ${exp.impact === 'Positivo' ? 'green' : 'red'}">
+                            ${exp.impact}
+                        </span></p>
+                        <p style="font-size: 0.9em; color: #666;">${exp.description}</p>
+                    `;
+                    explanationsGrid.appendChild(card);
+                });
+                
+            } catch (error) {
+                document.getElementById('resultTitle').textContent = '❌ Error';
+                document.getElementById('recommendation').textContent = 'Error analizando la URL';
+            }
+        }
+        
+        // Permitir Enter en el input
+        document.getElementById('urlInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') analyzeURL();
+        });
+    </script>
+</body>
+</html>

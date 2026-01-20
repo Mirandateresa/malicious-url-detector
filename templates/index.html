@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detector de URLs - SVM con Métricas</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-shield-alt"></i> Detector de URLs con SVM</h1>
+                <p class="subtitle">Sistema con métricas esenciales: F1-Score, Precisión, Recall</p>
+                <div class="model-status">
+                    <span id="modelStatus" class="status-badge">
+                        <i class="fas fa-sync-alt fa-spin"></i> Cargando métricas...
+                    </span>
+                </div>
+            </div>
+        </header>
+
+        <div class="dashboard-grid">
+            <!-- Panel de Análisis -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h2 class="card-title">Analizar URL</h2>
+                </div>
+                
+                <div class="form-group">
+                    <label for="urlInput"><i class="fas fa-link"></i> URL a analizar:</label>
+                    <div class="input-group">
+                        <input type="text" 
+                               id="urlInput" 
+                               class="form-control" 
+                               placeholder="https://ejemplo.com"
+                               value="https://example.com">
+                        <button onclick="analyzeURL()" class="btn btn-primary">
+                            <i class="fas fa-magnifying-glass"></i> Analizar
+                        </button>
+                    </div>
+                </div>
+
+                <div id="resultSection" class="result-section" style="display: none;"></div>
+            </div>
+
+            <!-- Panel de Métricas y Gráfica -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h2 class="card-title">Métricas del Modelo</h2>
+                </div>
+
+                <!-- Métricas principales simplificadas -->
+                <div class="metrics-grid" id="metricsDisplay">
+                    <div class="metric-card">
+                        <div class="metric-icon" style="background: rgba(106, 13, 173, 0.2);">
+                            <i class="fas fa-bullseye" style="color: #6A0DAD;"></i>
+                        </div>
+                        <div class="metric-info">
+                            <div class="metric-label">Precisión (Accuracy)</div>
+                            <div class="metric-value" id="accuracyValue">92.0%</div>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon" style="background: rgba(78, 205, 196, 0.2);">
+                            <i class="fas fa-chart-pie" style="color: #4ECDC4;"></i>
+                        </div>
+                        <div class="metric-info">
+                            <div class="metric-label">F1-Score</div>
+                            <div class="metric-value" id="f1Value">90.0%</div>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon" style="background: rgba(157, 78, 221, 0.2);">
+                            <i class="fas fa-project-diagram" style="color: #9D4EDD;"></i>
+                        </div>
+                        <div class="metric-info">
+                            <div class="metric-label">Kernel</div>
+                            <div class="metric-value" id="kernelDisplay">RBF</div>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon" style="background: rgba(255, 107, 107, 0.2);">
+                            <i class="fas fa-wave-square" style="color: #FF6B6B;"></i>
+                        </div>
+                        <div class="metric-info">
+                            <div class="metric-label">Recall</div>
+                            <div class="metric-value" id="recallValue">91.0%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Solo una gráfica grande -->
+                <div style="margin: 1.5rem 0;">
+                    <h4 style="color: var(--accent-teal); margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-chart-line"></i> Comparación de Métricas
+                    </h4>
+                    <div id="metricsChart" class="chart" style="height: 350px;"></div>
+                </div>
+
+                <button onclick="loadMetrics()" class="btn btn-secondary" style="width: 100%; margin-top: 10px;">
+                    <i class="fas fa-sync"></i> Actualizar Métricas
+                </button>
+            </div>
+        </div>
+
+        <!-- Panel de Configuración -->
+        <div class="card full-width">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-cogs"></i>
+                </div>
+                <h2 class="card-title">Configuración del Modelo</h2>
+            </div>
+
+            <div class="config-container">
+                <div class="config-left">
+                    <h4><i class="fas fa-sliders-h"></i> Parámetros de Entrenamiento</h4>
+                    
+                    <div class="form-group">
+                        <label for="kernelSelect">Kernel SVM:</label>
+                        <select id="kernelSelect" class="form-control">
+                            <option value="rbf">RBF (Recomendado) - Mayor F1-Score</option>
+                            <option value="linear">Lineal - Más rápido</option>
+                            <option value="poly">Polinomial - Para datos complejos</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cValue">Parámetro C: <span id="cValueDisplay">1.0</span></label>
+                        <input type="range" 
+                               id="cValue" 
+                               class="form-control"
+                               min="0.1" 
+                               max="10" 
+                               step="0.1" 
+                               value="1.0">
+                        <div class="param-hint">
+                            <small style="color: #9D4EDD;">Valores bajos = Modelo más simple</small>
+                            <small style="color: #9D4EDD;">Valores altos = Mejor ajuste a datos</small>
+                        </div>
+                    </div>
+
+                    <button onclick="trainModel()" class="btn btn-success" style="width: 100%; padding: 12px;" id="trainBtn">
+                        <i class="fas fa-bolt"></i> Entrenar Modelo con Nuevos Parámetros
+                    </button>
+
+                    <div id="trainingResults" class="training-results"></div>
+                </div>
+
+                <div class="config-right">
+                    <h4><i class="fas fa-info-circle"></i> Información del Sistema</h4>
+                    
+                    <div style="margin: 1.5rem 0;">
+                        <div class="info-box">
+                            <div class="info-icon">
+                                <i class="fas fa-microchip"></i>
+                            </div>
+                            <div class="info-content">
+                                <div class="info-label">Características Extraídas</div>
+                                <div class="info-value" id="featuresCount">20</div>
+                            </div>
+                        </div>
+                        
+                        <div class="info-box">
+                            <div class="info-icon">
+                                <i class="fas fa-calculator"></i>
+                            </div>
+                            <div class="info-content">
+                                <div class="info-label">Precisión (Precision)</div>
+                                <div class="info-value" id="precisionValue">89.0%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="info-box">
+                            <div class="info-icon">
+                                <i class="fas fa-database"></i>
+                            </div>
+                            <div class="info-content">
+                                <div class="info-label">Estado del Modelo</div>
+                                <div class="info-value" id="modelState" style="color: #06D6A0;">Activo</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
+                        <h5><i class="fas fa-cloud-upload-alt"></i> Cargar Datos</h5>
+                        <div style="margin-top: 1rem;">
+                            <div onclick="document.getElementById('datasetUpload').click()" style="cursor: pointer;">
+                                <div style="padding: 1rem; border: 2px dashed var(--border); border-radius: 10px; text-align: center; transition: all 0.3s;">
+                                    <i class="fas fa-file-csv" style="font-size: 2rem; color: var(--light-purple); margin-bottom: 0.5rem;"></i>
+                                    <div style="color: var(--text-primary); font-weight: 500;">Haz clic para subir CSV</div>
+                                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">
+                                        Formato: columnas 'url' y 'label'
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="file" 
+                                   id="datasetUpload" 
+                                   accept=".csv"
+                                   style="display: none;"
+                                   onchange="uploadDataset()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>Sistema de Detección de URLs - SVM con F1-Score y Métricas Esenciales</p>
+            <div class="footer-links">
+                <span><i class="fas fa-chart-bar"></i> Una gráfica clara</span>
+                <span><i class="fas fa-calculator"></i> F1-Score en tiempo real</span>
+                <span><i class="fas fa-rocket"></i> Rendimiento optimizado</span>
+            </div>
+        </footer>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
